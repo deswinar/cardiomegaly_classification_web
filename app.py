@@ -17,8 +17,8 @@ def load_uploaded_model(uploaded_file):
     - Loaded Keras model
     """
     try:
-        # Load the model from the uploaded file
-        model = load_model(uploaded_file)
+        # Read the file as bytes and load the model using BytesIO
+        model = load_model(io.BytesIO(uploaded_file.read()))
         st.success("Model uploaded and loaded successfully!")
         return model
     except Exception as e:
