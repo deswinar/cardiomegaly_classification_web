@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
 import io
+import tempfile  # Import tempfile for creating temporary files
 
 # Function to load the model from the uploaded file
 def load_uploaded_model(uploaded_file):
@@ -17,8 +18,14 @@ def load_uploaded_model(uploaded_file):
     - Loaded Keras model
     """
     try:
-        # Read the file as bytes and load the model using BytesIO
-        model = load_model(io.BytesIO(uploaded_file.read()))
+        # Create a temporary file to store the uploaded model file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_file:
+            # Write the uploaded file to the temporary file
+            temp_file.write(uploaded_file.read())
+            temp_file_path = temp_file.name
+
+        # Load the model from the temporary file path
+        model = load_model(temp_file_path)
         st.success("Model uploaded and loaded successfully!")
         return model
     except Exception as e:
