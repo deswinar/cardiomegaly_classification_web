@@ -1,6 +1,6 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import load_img, img_to_array
+from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
 
@@ -19,6 +19,10 @@ def prepare_image(image, target_size=(150, 150)):
     Returns:
     - Preprocessed image array suitable for model prediction
     """
+    # Convert to RGB if image has an alpha channel (RGBA)
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    
     # Resize and convert the image to an array
     img = image.resize(target_size)
     img_array = img_to_array(img)
@@ -45,11 +49,11 @@ if uploaded_file is not None:
     # Make prediction
     prediction = model.predict(prepared_image)
 
-    # Output prediction (0 = Normal, 1 = Cardiomegaly)
+    # Output prediction (0 = Cardiomegaly, 1 = Normal)
     if prediction[0][0] > 0.5:
-        result = "Cardiomegaly (0)"
-    else:
         result = "Normal (1)"
+    else:
+        result = "Cardiomegaly (0)"
 
     # Display the result
     st.write(f"Prediction: **{result}**")
