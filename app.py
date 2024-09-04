@@ -47,9 +47,9 @@ if uploaded_file is not None:
 
     # Output prediction (0 = Normal, 1 = Cardiomegaly)
     if prediction[0][0] > 0.5:
-        result = "Cardiomegaly (1)"
+        result = "Cardiomegaly (0)"
     else:
-        result = "Normal (0)"
+        result = "Normal (1)"
 
     # Display the result
     st.write(f"Prediction: **{result}**")
