@@ -4,7 +4,7 @@ from PIL import Image
 import numpy as np
 
 # Load your trained model
-model = load_model('heart_classification_model.h5')
+model = load_model('Jantung_Model.h5')
 
 # Function to preprocess the image
 def preprocess_image(image):
