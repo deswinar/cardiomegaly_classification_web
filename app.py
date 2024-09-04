@@ -4,14 +4,28 @@ from PIL import Image
 import numpy as np
 
 # Load your trained model
-model = load_model('Jantung_Model.h5')
+model = load_model('heart_classification_model.h5')
 
 # Function to preprocess the image
 def preprocess_image(image):
-    image = image.resize((224, 224))  # Resize to the size your model expects
+    # Resize to the size your model expects (adjust if your model's input size is different)
+    image = image.resize((224, 224))  
     image = np.array(image)
-    image = image / 255.0  # Normalize the image
-    image = np.expand_dims(image, axis=0)  # Add batch dimension
+    
+    # Ensure the image has 3 channels (RGB). If the image is in grayscale (1 channel), convert it to RGB
+    if len(image.shape) == 2:  # Grayscale image
+        image = np.stack((image,)*3, axis=-1)
+
+    # Normalize the image
+    image = image / 255.0  
+    
+    # Ensure the image has the shape (1, 224, 224, 3)
+    if image.shape[-1] == 4:  # If image has an alpha channel, remove it
+        image = image[..., :3]
+    
+    # Add batch dimension
+    image = np.expand_dims(image, axis=0)  
+    
     return image
 
 # Streamlit app
@@ -26,9 +40,12 @@ if uploaded_file is not None:
     st.image(image, caption='Uploaded Image.', use_column_width=True)
 
     # Preprocess and predict
-    processed_image = preprocess_image(image)
-    prediction = model.predict(processed_image)
-    result = "Cardiomegaly" if prediction[0] > 0.5 else "Normal"
+    try:
+        processed_image = preprocess_image(image)
+        prediction = model.predict(processed_image)
+        result = "Cardiomegaly" if prediction[0] > 0.5 else "Normal"
 
-    # Display the result
-    st.write(f"Prediction: **{result}**")
+        # Display the result
+        st.write(f"Prediction: **{result}**")
+    except Exception as e:
+        st.error(f"Error during prediction: {e}")
