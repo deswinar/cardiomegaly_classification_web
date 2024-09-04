@@ -3,9 +3,27 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
+import io
 
-# Load the saved model
-model = load_model('Jantung_Model.h5')  # Ensure the path is correct or place the model in the same directory as app.py
+# Function to load the model from the uploaded file
+def load_uploaded_model(uploaded_file):
+    """
+    Loads a Keras model from an uploaded file.
+
+    Args:
+    - uploaded_file: Uploaded file object from Streamlit
+
+    Returns:
+    - Loaded Keras model
+    """
+    try:
+        # Load the model from the uploaded file
+        model = load_model(uploaded_file)
+        st.success("Model uploaded and loaded successfully!")
+        return model
+    except Exception as e:
+        st.error(f"Error loading the model: {e}")
+        return None
 
 # Function to preprocess the image for prediction
 def prepare_image(image, target_size=(150, 150)):
@@ -42,13 +60,22 @@ def prepare_image(image, target_size=(150, 150)):
 # Streamlit app
 st.title("Heart Classification (Normal or Cardiomegaly)")
 
-# File uploader for the user to upload an image
-uploaded_file = st.file_uploader("Upload an image of the heart X-ray...", type=["jpg", "jpeg", "png"])
+# File uploader for the user to upload their model
+uploaded_model_file = st.file_uploader("Upload your model (.h5 or .keras file)...", type=["h5", "keras"])
 
-if uploaded_file is not None:
+if uploaded_model_file is not None:
+    # Load the uploaded model
+    model = load_uploaded_model(uploaded_model_file)
+else:
+    model = None
+
+# File uploader for the user to upload an image
+uploaded_image_file = st.file_uploader("Upload an image of the heart X-ray...", type=["jpg", "jpeg", "png"])
+
+if uploaded_image_file is not None and model is not None:
     try:
         # Display the uploaded image
-        image = Image.open(uploaded_file)
+        image = Image.open(uploaded_image_file)
         st.image(image, caption='Uploaded Image.', use_column_width=True)
 
         # Preprocess the image
@@ -72,3 +99,6 @@ if uploaded_file is not None:
 
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
+
+elif uploaded_image_file is not None and model is None:
+    st.warning("Please upload a model file first.")
