@@ -19,17 +19,24 @@ def prepare_image(image, target_size=(150, 150)):
     Returns:
     - Preprocessed image array suitable for model prediction
     """
-    # Convert to RGB if image has an alpha channel (RGBA)
-    if image.mode == 'RGBA':
+    # Ensure the image is in RGB mode (3 channels)
+    if image.mode != 'RGB':
         image = image.convert('RGB')
-    
+
     # Resize and convert the image to an array
     img = image.resize(target_size)
     img_array = img_to_array(img)
+
     # Normalize the image array
     img_array = img_array / 255.0
+    
     # Expand dimensions to match the input shape (1, 150, 150, 3)
     img_array = np.expand_dims(img_array, axis=0)
+    
+    # Check shape
+    if img_array.shape != (1, *target_size, 3):
+        raise ValueError(f"Unexpected image shape: {img_array.shape}, expected (1, {target_size[0]}, {target_size[1]}, 3)")
+    
     return img_array
 
 # Streamlit app
@@ -39,22 +46,29 @@ st.title("Heart Classification (Normal or Cardiomegaly)")
 uploaded_file = st.file_uploader("Upload an image of the heart X-ray...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    # Display the uploaded image
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image.', use_column_width=True)
+    try:
+        # Display the uploaded image
+        image = Image.open(uploaded_file)
+        st.image(image, caption='Uploaded Image.', use_column_width=True)
 
-    # Preprocess the image
-    prepared_image = prepare_image(image)
+        # Preprocess the image
+        prepared_image = prepare_image(image)
 
-    # Make prediction
-    prediction = model.predict(prepared_image)
+        # Make prediction
+        prediction = model.predict(prepared_image)
 
-    # Output prediction (0 = Cardiomegaly, 1 = Normal)
-    if prediction[0][0] > 0.5:
-        result = "Normal (1)"
-    else:
-        result = "Cardiomegaly (0)"
+        # Output prediction (0 = Cardiomegaly, 1 = Normal)
+        if prediction[0][0] > 0.5:
+            result = "Normal (1)"
+        else:
+            result = "Cardiomegaly (0)"
 
-    # Display the result
-    st.write(f"Prediction: **{result}**")
-    st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+        # Display the result
+        st.write(f"Prediction: **{result}**")
+        st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+
+    except ValueError as e:
+        st.error(f"Error processing image: {e}")
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
