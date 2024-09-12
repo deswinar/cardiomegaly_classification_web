@@ -1,7 +1,6 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
 import numpy as np
-from PIL import Image
 import tempfile
 
 # Function to load the model from the uploaded file
@@ -43,6 +42,9 @@ if menu == "Cardiomegaly":
             prepared_image = prepare_image(image)
             prediction = model.predict(prepared_image)
 
+            # Debugging: Print prediction values
+            st.write(f"Raw prediction values: {prediction}")
+
             confidence = prediction[0][0]
             if confidence > 0.5:
                 result = "Normal (1)"
@@ -63,7 +65,6 @@ if menu == "Cardiomegaly":
 elif menu == "Coroner":
     st.header("Coroner Prediction")
     
-    # Upload model for Coroner prediction
     uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.keras file)...", type=["keras"])
     
     if uploaded_coroner_model_file is not None:
@@ -71,7 +72,6 @@ elif menu == "Coroner":
     else:
         coroner_model = None
 
-    # Input fields for the Coroner features
     with st.form("coroner_form"):
         st.write("Input the following features:")
         male = st.selectbox("Male (0 = No, 1 = Yes):", [0, 1])
@@ -90,39 +90,27 @@ elif menu == "Coroner":
         heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
         glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
 
-        # Submit button
         submitted = st.form_submit_button("Predict")
     
-    # Prediction logic
     if submitted:
         if coroner_model is not None:
-            # Create a numpy array from input data
             input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
                                     prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
                                     diaBP, BMI, heartRate, glucose]], dtype=np.float32)
             
-            # Check input data shape
-            st.write(f"Input data shape: {input_data.shape}")
-            
-            # Check model input shape
+            st.write(f"Input data: {input_data}")
+
             try:
-                model_input_shape = coroner_model.input_shape
-                st.write(f"Model expected input shape: {model_input_shape}")
+                prediction = coroner_model.predict(input_data)
                 
-                # Check if the number of features is correct
-                if input_data.shape[1] != model_input_shape[1]:
-                    st.error(f"Input data shape ({input_data.shape[1]}) does not match model input shape ({model_input_shape[1]}).")
-                else:
-                    # Make a prediction
-                    try:
-                        prediction = coroner_model.predict(input_data)
-                        confidence = prediction[0][0]
-                        result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
-                        st.write(f"Prediction: **{result}**")
-                        st.write(f"Prediction Confidence: {confidence:.2f}")
-                    except Exception as e:
-                        st.error(f"Error during prediction: {e}")
+                # Debugging: Print prediction values
+                st.write(f"Raw prediction values: {prediction}")
+
+                confidence = prediction[0][0]
+                result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
+                st.write(f"Prediction: **{result}**")
+                st.write(f"Prediction Confidence: {confidence:.2f}")
             except Exception as e:
-                st.error(f"Unable to determine model input shape: {e}")
+                st.error(f"Error during prediction: {e}")
         else:
             st.warning("Please upload a model file first.")
