@@ -3,14 +3,8 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
-import pandas as pd
 import io
 import tempfile
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 
 # Function to load the model from the uploaded file
 def load_uploaded_model(uploaded_file):
@@ -83,52 +77,52 @@ if menu == "Cardiomegaly":
         st.warning("Please upload a model file first.")
 
 elif menu == "Coroner":
-    st.header("Coroner - Heart Disease Analysis Using Framingham Dataset")
+    st.header("Coroner Prediction")
     
-    # Upload dataset
-    uploaded_file = st.file_uploader("Upload Framingham Heart Study dataset (CSV format)...", type=["csv"])
-
-    if uploaded_file is not None:
-        # Load the dataset
-        try:
-            data = pd.read_csv(uploaded_file)
-            st.write("Dataset Preview:")
-            st.dataframe(data.head())
-
-            # Basic Statistics
-            st.write("Dataset Statistics:")
-            st.write(data.describe())
-
-            # Visualize Data
-            st.write("Visualize Data:")
-            fig, ax = plt.subplots()
-            sns.heatmap(data.corr(), annot=True, cmap='coolwarm', ax=ax)
-            st.pyplot(fig)
-
-            # Data Preparation for Model
-            st.write("Model Training:")
-            data = data.dropna()  # Handle missing values for simplicity
-
-            # Feature Selection
-            X = data.drop('TenYearCHD', axis=1)
-            y = data['TenYearCHD']
-
-            # Train-Test Split
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-            # Logistic Regression Model
-            model = LogisticRegression(max_iter=1000)
-            model.fit(X_train, y_train)
-            predictions = model.predict(X_test)
-
-            # Display Results
-            st.write("Model Accuracy:", accuracy_score(y_test, predictions))
-            st.write("Confusion Matrix:")
-            st.write(confusion_matrix(y_test, predictions))
-            st.write("Classification Report:")
-            st.text(classification_report(y_test, predictions))
-
-        except Exception as e:
-            st.error(f"Error loading or processing the dataset: {e}")
+    # Upload model for Coroner prediction
+    uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.h5 file)...", type=["h5"])
+    
+    if uploaded_coroner_model_file is not None:
+        coroner_model = load_uploaded_model(uploaded_coroner_model_file)
     else:
-        st.info("Please upload the Framingham Heart Study dataset in CSV format.")
+        coroner_model = None
+
+    # Input fields for the Coroner features
+    with st.form("coroner_form"):
+        st.write("Input the following features:")
+        male = st.selectbox("Male (0 = No, 1 = Yes):", [0, 1])
+        age = st.number_input("Age:", min_value=0, max_value=120, value=50)
+        education = st.selectbox("Education (1-4):", [1, 2, 3, 4])
+        currentSmoker = st.selectbox("Current Smoker (0 = No, 1 = Yes):", [0, 1])
+        cigsPerDay = st.number_input("Cigarettes per Day:", min_value=0, max_value=100, value=0)
+        BPMeds = st.selectbox("Blood Pressure Meds (0 = No, 1 = Yes):", [0, 1])
+        prevalentStroke = st.selectbox("Prevalent Stroke (0 = No, 1 = Yes):", [0, 1])
+        prevalentHyp = st.selectbox("Prevalent Hypertension (0 = No, 1 = Yes):", [0, 1])
+        diabetes = st.selectbox("Diabetes (0 = No, 1 = Yes):", [0, 1])
+        totChol = st.number_input("Total Cholesterol (mg/dL):", min_value=100, max_value=600, value=200)
+        sysBP = st.number_input("Systolic Blood Pressure (mm Hg):", min_value=80, max_value=250, value=120)
+        diaBP = st.number_input("Diastolic Blood Pressure (mm Hg):", min_value=50, max_value=150, value=80)
+        BMI = st.number_input("Body Mass Index (kg/m^2):", min_value=10.0, max_value=60.0, value=25.0)
+        heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
+        glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
+        
+        # Submit button
+        submitted = st.form_submit_button("Predict")
+    
+    # Prediction logic
+    if submitted:
+        if coroner_model is not None:
+            # Create a numpy array from input data
+            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
+                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
+                                    diaBP, BMI, heartRate, glucose]])
+            
+            # Make a prediction
+            prediction = coroner_model.predict(input_data)
+            
+            # Display prediction results
+            result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
+            st.write(f"Prediction: **{result}**")
+            st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+        else:
+            st.warning("Please upload a model file first.")
