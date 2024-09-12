@@ -43,13 +43,14 @@ if menu == "Cardiomegaly":
             prepared_image = prepare_image(image)
             prediction = model.predict(prepared_image)
 
-            if prediction[0][0] > 0.5:
+            confidence = prediction[0][0]
+            if confidence > 0.5:
                 result = "Normal (1)"
             else:
                 result = "Cardiomegaly (0)"
 
             st.write(f"Prediction: **{result}**")
-            st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+            st.write(f"Prediction Confidence: {confidence:.2f}")
 
         except ValueError as e:
             st.error(f"Error processing image: {e}")
@@ -115,9 +116,10 @@ elif menu == "Coroner":
                     # Make a prediction
                     try:
                         prediction = coroner_model.predict(input_data)
-                        result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
+                        confidence = prediction[0][0]
+                        result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                         st.write(f"Prediction: **{result}**")
-                        st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+                        st.write(f"Prediction Confidence: {confidence:.2f}")
                     except Exception as e:
                         st.error(f"Error during prediction: {e}")
             except Exception as e:
