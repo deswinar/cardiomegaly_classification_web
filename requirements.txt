@@ -1,4 +1,7 @@
-streamlit
 tensorflow
-pillow
-numpy
+streamlit
+seaborn
+matplotlib
+scikit-learn
+pandas
+Pillow  # For image processing
