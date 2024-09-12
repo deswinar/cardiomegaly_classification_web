@@ -115,14 +115,26 @@ elif menu == "Coroner":
             # Create a numpy array from input data
             input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
                                     prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose]])
+                                    diaBP, BMI, heartRate, glucose]], dtype=np.float32)
             
+            # Check input data shape
+            st.write(f"Input data shape: {input_data.shape}")
+            
+            # Check model input shape
+            try:
+                model_input_shape = coroner_model.input_shape
+                st.write(f"Model expected input shape: {model_input_shape}")
+            except Exception as e:
+                st.error(f"Unable to determine model input shape: {e}")
+
             # Make a prediction
-            prediction = coroner_model.predict(input_data)
-            
-            # Display prediction results
-            result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
-            st.write(f"Prediction: **{result}**")
-            st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+            try:
+                prediction = coroner_model.predict(input_data)
+                # Display prediction results
+                result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
+                st.write(f"Prediction: **{result}**")
+                st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+            except Exception as e:
+                st.error(f"Error during prediction: {e}")
         else:
             st.warning("Please upload a model file first.")
