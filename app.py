@@ -1,9 +1,7 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing.image import img_to_array
 import numpy as np
 from PIL import Image
-import io
 import tempfile
 
 # Function to load the model from the uploaded file
@@ -19,21 +17,6 @@ def load_uploaded_model(uploaded_file):
     except Exception as e:
         st.error(f"Error loading the model: {e}")
         return None
-
-# Function to preprocess the image for prediction
-def prepare_image(image, target_size=(150, 150)):
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
-
-    img = image.resize(target_size)
-    img_array = img_to_array(img)
-    img_array = img_array / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
-    
-    if img_array.shape != (1, *target_size, 3):
-        raise ValueError(f"Unexpected image shape: {img_array.shape}, expected (1, {target_size[0]}, {target_size[1]}, 3)")
-    
-    return img_array
 
 # Streamlit app
 st.title("Heart Classification")
@@ -125,17 +108,20 @@ elif menu == "Coroner":
             try:
                 model_input_shape = coroner_model.input_shape
                 st.write(f"Model expected input shape: {model_input_shape}")
+                
+                # Check if the number of features is correct
+                if input_data.shape[1] != model_input_shape[1]:
+                    st.error(f"Input data shape ({input_data.shape[1]}) does not match model input shape ({model_input_shape[1]}).")
+                else:
+                    # Make a prediction
+                    try:
+                        prediction = coroner_model.predict(input_data)
+                        result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
+                        st.write(f"Prediction: **{result}**")
+                        st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+                    except Exception as e:
+                        st.error(f"Error during prediction: {e}")
             except Exception as e:
                 st.error(f"Unable to determine model input shape: {e}")
-
-            # Make a prediction
-            try:
-                prediction = coroner_model.predict(input_data)
-                # Display prediction results
-                result = "Risk of CHD (1)" if prediction[0][0] > 0.5 else "No Risk of CHD (0)"
-                st.write(f"Prediction: **{result}**")
-                st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
-            except Exception as e:
-                st.error(f"Error during prediction: {e}")
         else:
             st.warning("Please upload a model file first.")
