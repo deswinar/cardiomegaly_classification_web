@@ -9,7 +9,7 @@ import tempfile
 # Function to load the model from the uploaded file
 def load_uploaded_model(uploaded_file):
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.keras') as temp_file:
             temp_file.write(uploaded_file.read())
             temp_file_path = temp_file.name
 
@@ -80,7 +80,7 @@ elif menu == "Coroner":
     st.header("Coroner Prediction")
     
     # Upload model for Coroner prediction
-    uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.h5 file)...", type=["h5"])
+    uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.keras file)...", type=["keras"])
     
     if uploaded_coroner_model_file is not None:
         coroner_model = load_uploaded_model(uploaded_coroner_model_file)
