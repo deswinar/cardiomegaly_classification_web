@@ -105,7 +105,8 @@ elif menu == "Coroner":
         BMI = st.number_input("Body Mass Index (kg/m^2):", min_value=10.0, max_value=60.0, value=25.0)
         heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
         glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
-        
+        TenYearCHD = st.selectbox("Ten Year CHD (0 = No, 1 = Yes):", [0, 1])
+
         # Submit button
         submitted = st.form_submit_button("Predict")
     
@@ -115,7 +116,7 @@ elif menu == "Coroner":
             # Create a numpy array from input data
             input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
                                     prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose]], dtype=np.float32)
+                                    diaBP, BMI, heartRate, glucose, TenYearCHD]], dtype=np.float32)
             
             # Check input data shape
             st.write(f"Input data shape: {input_data.shape}")
