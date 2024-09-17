@@ -1,21 +1,11 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
 import numpy as np
-import tempfile
 import pickle
+import tempfile
 
-# Function to load the .pkl model from the uploaded file
-def load_pkl_model(uploaded_file):
-    try:
-        model = pickle.load(uploaded_file)
-        st.success("Model uploaded and loaded successfully!")
-        return model
-    except Exception as e:
-        st.error(f"Error loading the model: {e}")
-        return None
-        
-# Function to load the model from the uploaded file
-def load_uploaded_model(uploaded_file):
+# Function to load the .keras model from the uploaded file
+def load_uploaded_keras_model(uploaded_file):
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.keras') as temp_file:
             temp_file.write(uploaded_file.read())
@@ -26,6 +16,16 @@ def load_uploaded_model(uploaded_file):
         return model
     except Exception as e:
         st.error(f"Error loading the model: {e}")
+        return None
+
+# Function to load the .pkl model from the uploaded file
+def load_uploaded_pkl_model(uploaded_file):
+    try:
+        model = pickle.load(uploaded_file)
+        st.success("Model uploaded and loaded successfully!")
+        return model
+    except Exception as e:
+        st.error(f"Error loading the .pkl model: {e}")
         return None
 
 # Streamlit app
@@ -40,7 +40,7 @@ if menu == "Cardiomegaly":
     uploaded_model_file = st.file_uploader("Upload your model (.h5 or .keras file)...", type=["h5", "keras"])
 
     if uploaded_model_file is not None:
-        model = load_uploaded_model(uploaded_model_file)
+        model = load_uploaded_keras_model(uploaded_model_file)
     else:
         model = None
 
@@ -50,17 +50,13 @@ if menu == "Cardiomegaly":
         try:
             image = Image.open(uploaded_image_file)
             st.image(image, caption='Uploaded Image.', use_column_width=True)
-            prepared_image = prepare_image(image)
+            prepared_image = prepare_image(image)  # Assuming you have a function to prepare the image for the model
             prediction = model.predict(prepared_image)
 
-            # Debugging: Print prediction values
             st.write(f"Raw prediction values: {prediction}")
 
             confidence = prediction[0][0]
-            if confidence > 0.5:
-                result = "Normal (1)"
-            else:
-                result = "Cardiomegaly (0)"
+            result = "Normal (1)" if confidence > 0.5 else "Cardiomegaly (0)"
 
             st.write(f"Prediction: **{result}**")
             st.write(f"Prediction Confidence: {confidence:.2f}")
@@ -72,16 +68,20 @@ if menu == "Cardiomegaly":
 
     elif uploaded_image_file is not None and model is None:
         st.warning("Please upload a model file first.")
-        
-# Coroner Section
-elif menu == "Coroner":
-    st.header("Coroner CHD Risk Prediction")
-    
-    # Upload model
-    uploaded_pkl_model_file = st.file_uploader("Upload your .pkl model...", type=["pkl"])
 
-    if uploaded_pkl_model_file is not None:
-        coroner_model = load_pkl_model(uploaded_pkl_model_file)
+elif menu == "Coroner":
+    st.header("Coroner Prediction")
+
+    uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.keras or .pkl file)...", type=["keras", "pkl"])
+    
+    # Determine which model to load based on file extension
+    if uploaded_coroner_model_file is not None:
+        if uploaded_coroner_model_file.name.endswith('.keras'):
+            coroner_model = load_uploaded_keras_model(uploaded_coroner_model_file)
+        elif uploaded_coroner_model_file.name.endswith('.pkl'):
+            coroner_model = load_uploaded_pkl_model(uploaded_coroner_model_file)
+        else:
+            coroner_model = None
     else:
         coroner_model = None
 
@@ -103,21 +103,30 @@ elif menu == "Coroner":
         heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
         glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
 
-    if st.button("Predict"):
+        submitted = st.form_submit_button("Predict")
+    
+    if submitted:
         if coroner_model is not None:
-            # Prepare the input data for the model
-            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds, 
-                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP, 
-                                    diaBP, BMI, heartRate, glucose]])
+            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
+                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
+                                    diaBP, BMI, heartRate, glucose]], dtype=np.float32)
+            
+            st.write(f"Input data: {input_data}")
 
             try:
-                prediction = coroner_model.predict(input_data)
-                confidence = max(coroner_model.predict_proba(input_data)[0])  # Assuming the model has predict_proba method
-                result = "Risk of CHD (1)" if prediction == 1 else "No CHD Risk (0)"
-                
+                if uploaded_coroner_model_file.name.endswith('.keras'):
+                    # For .keras model
+                    prediction = coroner_model.predict(input_data)
+                    confidence = prediction[0][0]
+                elif uploaded_coroner_model_file.name.endswith('.pkl'):
+                    # For .pkl model
+                    prediction = coroner_model.predict(input_data)
+                    confidence = max(coroner_model.predict_proba(input_data)[0])
+
+                result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
                 st.write(f"Prediction Confidence: {confidence:.2f}")
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
         else:
-            st.warning("Please upload a .pkl model file first.")
+            st.warning("Please upload a model file first.")
