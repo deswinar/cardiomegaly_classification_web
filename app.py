@@ -2,6 +2,7 @@ import streamlit as st
 from tensorflow.keras.models import load_model
 import numpy as np
 import tempfile
+import pickle
 
 # Function to load the .pkl model from the uploaded file
 def load_pkl_model(uploaded_file):
