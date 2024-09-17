@@ -128,8 +128,7 @@ elif menu == "Coroner":
                 
                 # For models with predict_proba method
                 if hasattr(coroner_model, 'predict_proba'):
-                    #confidence = max(coroner_model.predict_proba(input_data)[0])
-                    confidence = prediction[0]
+                    confidence = max(coroner_model.predict_proba(input_data)[0])
                 else:
                     confidence = prediction[0]
                 
