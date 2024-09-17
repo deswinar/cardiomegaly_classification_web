@@ -85,7 +85,6 @@ elif menu == "Coroner":
 
     uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.keras or .pkl file)...", type=["keras", "pkl"])
     
-    # Determine which model to load based on file extension
     if uploaded_coroner_model_file is not None:
         if uploaded_coroner_model_file.name.endswith('.keras'):
             coroner_model = load_uploaded_keras_model(uploaded_coroner_model_file)
@@ -127,6 +126,9 @@ elif menu == "Coroner":
 
             try:
                 prediction = coroner_model.predict(input_data)
+                st.write(f"Raw model prediction: {prediction}")
+
+                # Assuming binary classification with threshold 0.5
                 confidence = prediction[0]
 
                 result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
