@@ -34,6 +34,10 @@ def load_uploaded_pkl_model(uploaded_file):
         st.error(f"Error loading the .pkl model: {e}")
         return None
 
+# Function to handle one-hot encoding for education
+def one_hot_encode_education(education):
+    return [1 if i == education else 0 for i in range(1, 5)]
+
 # Streamlit app
 st.title("Heart Classification")
 
@@ -113,9 +117,12 @@ elif menu == "Coroner":
     
     if submitted:
         if coroner_model is not None:
-            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
+            # Create one-hot encoded features for education
+            education_one_hot = one_hot_encode_education(education)
+            
+            input_data = np.array([[male, age, currentSmoker, cigsPerDay, BPMeds,
                                     prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose]], dtype=np.float32)
+                                    diaBP, BMI, heartRate, glucose] + education_one_hot], dtype=np.float32)
             
             st.write(f"Input data: {input_data}")
 
