@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import joblib
 import tempfile
+from tensorflow.keras.models import load_model
+from PIL import Image
 
 # Function to load the .keras model from the uploaded file
 def load_uploaded_keras_model(uploaded_file):
@@ -125,13 +127,8 @@ elif menu == "Coroner":
 
             try:
                 prediction = coroner_model.predict(input_data)
-                
-                # For models with predict_proba method
-                if hasattr(coroner_model, 'predict_proba'):
-                    confidence = max(coroner_model.predict_proba(input_data)[0])
-                else:
-                    confidence = prediction[0]
-                
+                confidence = prediction[0]
+
                 result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
                 st.write(f"Prediction Confidence: {confidence:.2f}")
