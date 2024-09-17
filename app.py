@@ -5,6 +5,23 @@ import tempfile
 from tensorflow.keras.models import load_model
 from PIL import Image
 
+# Define normalization ranges (these should be based on your training data)
+FEATURE_RANGES = {
+    'age': (0, 120),
+    'education': (1, 4),
+    'cigsPerDay': (0, 100),
+    'totChol': (100, 600),
+    'sysBP': (80, 250),
+    'diaBP': (50, 150),
+    'BMI': (10.0, 60.0),
+    'heartRate': (30, 200),
+    'glucose': (50, 400)
+}
+
+# Function to normalize features
+def normalize_feature(value, min_value, max_value):
+    return (value - min_value) / (max_value - min_value)
+
 # Function to load the .keras model from the uploaded file
 def load_uploaded_keras_model(uploaded_file):
     try:
@@ -117,12 +134,24 @@ elif menu == "Coroner":
     
     if submitted:
         if coroner_model is not None:
-            input_data = np.array([[male, age, currentSmoker, cigsPerDay, BPMeds,
-                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose, 
+            # Normalize input data
+            normalized_age = normalize_feature(age, *FEATURE_RANGES['age'])
+            normalized_education = normalize_feature(education, *FEATURE_RANGES['education'])
+            normalized_cigsPerDay = normalize_feature(cigsPerDay, *FEATURE_RANGES['cigsPerDay'])
+            normalized_totChol = normalize_feature(totChol, *FEATURE_RANGES['totChol'])
+            normalized_sysBP = normalize_feature(sysBP, *FEATURE_RANGES['sysBP'])
+            normalized_diaBP = normalize_feature(diaBP, *FEATURE_RANGES['diaBP'])
+            normalized_BMI = normalize_feature(BMI, *FEATURE_RANGES['BMI'])
+            normalized_heartRate = normalize_feature(heartRate, *FEATURE_RANGES['heartRate'])
+            normalized_glucose = normalize_feature(glucose, *FEATURE_RANGES['glucose'])
+
+            # Prepare input data
+            input_data = np.array([[male, normalized_age, normalized_cigsPerDay, normalized_totChol, 
+                                    normalized_sysBP, normalized_diaBP, normalized_BMI, normalized_heartRate, 
+                                    normalized_glucose, 
                                     education == 1, education == 2, education == 3, education == 4]], dtype=np.float32)
             
-            st.write(f"Input data: {input_data}")
+            st.write(f"Normalized input data: {input_data}")
 
             try:
                 prediction = coroner_model.predict(input_data)
