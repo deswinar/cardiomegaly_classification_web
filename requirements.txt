@@ -2,6 +2,6 @@ tensorflow
 streamlit
 seaborn
 matplotlib
-scikit-learn==1.3.2
+scikit-learn
 pandas
 Pillow  # For image processing
