@@ -1,7 +1,6 @@
 import streamlit as st
-from tensorflow.keras.models import load_model
 import numpy as np
-import pickle
+import joblib
 import tempfile
 
 # Function to load the .keras model from the uploaded file
@@ -21,8 +20,12 @@ def load_uploaded_keras_model(uploaded_file):
 # Function to load the .pkl model from the uploaded file
 def load_uploaded_pkl_model(uploaded_file):
     try:
-        model = pickle.load(uploaded_file)
-        
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pkl') as temp_file:
+            temp_file.write(uploaded_file.read())
+            temp_file_path = temp_file.name
+
+        model = joblib.load(temp_file_path)
+
         # Ensure that the loaded object is a valid model and has 'predict' method
         if hasattr(model, 'predict'):
             st.success("Model uploaded and loaded successfully!")
@@ -33,10 +36,6 @@ def load_uploaded_pkl_model(uploaded_file):
     except Exception as e:
         st.error(f"Error loading the .pkl model: {e}")
         return None
-
-# Function to handle one-hot encoding for education
-def one_hot_encode_education(education):
-    return [1 if i == education else 0 for i in range(1, 5)]
 
 # Streamlit app
 st.title("Heart Classification")
@@ -117,30 +116,22 @@ elif menu == "Coroner":
     
     if submitted:
         if coroner_model is not None:
-            # Create one-hot encoded features for education
-            education_one_hot = one_hot_encode_education(education)
-            
             input_data = np.array([[male, age, currentSmoker, cigsPerDay, BPMeds,
                                     prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose] + education_one_hot], dtype=np.float32)
+                                    diaBP, BMI, heartRate, glucose, 
+                                    education == 1, education == 2, education == 3, education == 4]], dtype=np.float32)
             
             st.write(f"Input data: {input_data}")
 
             try:
-                if uploaded_coroner_model_file.name.endswith('.keras'):
-                    # For .keras model
-                    prediction = coroner_model.predict(input_data)
-                    confidence = prediction[0][0]
-                elif uploaded_coroner_model_file.name.endswith('.pkl'):
-                    # For .pkl model
-                    prediction = coroner_model.predict(input_data)
-                    
-                    # Ensure that the model has predict_proba method
-                    if hasattr(coroner_model, 'predict_proba'):
-                        confidence = max(coroner_model.predict_proba(input_data)[0])
-                    else:
-                        confidence = prediction[0]
-
+                prediction = coroner_model.predict(input_data)
+                
+                # For models with predict_proba method
+                if hasattr(coroner_model, 'predict_proba'):
+                    confidence = max(coroner_model.predict_proba(input_data)[0])
+                else:
+                    confidence = prediction[0]
+                
                 result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
                 st.write(f"Prediction Confidence: {confidence:.2f}")
