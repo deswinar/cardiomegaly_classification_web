@@ -30,7 +30,7 @@ def load_uploaded_pkl_model(uploaded_file):
 
         model = joblib.load(temp_file_path)
 
-        if hasattr(model, 'predict'):
+        if hasattr(model, 'predict_proba'):
             st.success("Model uploaded and loaded successfully!")
             return model
         else:
@@ -103,11 +103,11 @@ if menu == "Coroner":
             st.write(f"Normalized input data: {input_data}")
 
             try:
-                prediction = coroner_model.predict(input_data)
-                st.write(f"Raw model prediction: {prediction}")
+                prediction_proba = coroner_model.predict_proba(input_data)
+                st.write(f"Raw model prediction probabilities: {prediction_proba}")
 
                 # Assuming binary classification with threshold 0.5
-                confidence = prediction[0]
+                confidence = prediction_proba[0][1]  # Probability for class 1
 
                 result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
