@@ -22,8 +22,14 @@ def load_uploaded_keras_model(uploaded_file):
 def load_uploaded_pkl_model(uploaded_file):
     try:
         model = pickle.load(uploaded_file)
-        st.success("Model uploaded and loaded successfully!")
-        return model
+        
+        # Ensure that the loaded object is a valid model and has 'predict' method
+        if hasattr(model, 'predict'):
+            st.success("Model uploaded and loaded successfully!")
+            return model
+        else:
+            st.error("The uploaded .pkl file is not a valid model.")
+            return None
     except Exception as e:
         st.error(f"Error loading the .pkl model: {e}")
         return None
@@ -121,7 +127,12 @@ elif menu == "Coroner":
                 elif uploaded_coroner_model_file.name.endswith('.pkl'):
                     # For .pkl model
                     prediction = coroner_model.predict(input_data)
-                    confidence = max(coroner_model.predict_proba(input_data)[0])
+                    
+                    # Ensure that the model has predict_proba method
+                    if hasattr(coroner_model, 'predict_proba'):
+                        confidence = max(coroner_model.predict_proba(input_data)[0])
+                    else:
+                        confidence = prediction[0]
 
                 result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
