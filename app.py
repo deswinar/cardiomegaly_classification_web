@@ -3,6 +3,16 @@ from tensorflow.keras.models import load_model
 import numpy as np
 import tempfile
 
+# Function to load the .pkl model from the uploaded file
+def load_pkl_model(uploaded_file):
+    try:
+        model = pickle.load(uploaded_file)
+        st.success("Model uploaded and loaded successfully!")
+        return model
+    except Exception as e:
+        st.error(f"Error loading the model: {e}")
+        return None
+        
 # Function to load the model from the uploaded file
 def load_uploaded_model(uploaded_file):
     try:
@@ -61,56 +71,52 @@ if menu == "Cardiomegaly":
 
     elif uploaded_image_file is not None and model is None:
         st.warning("Please upload a model file first.")
-
+        
+# Coroner Section
 elif menu == "Coroner":
-    st.header("Coroner Prediction")
+    st.header("Coroner CHD Risk Prediction")
     
-    uploaded_coroner_model_file = st.file_uploader("Upload your Coroner model (.keras file)...", type=["keras"])
-    
-    if uploaded_coroner_model_file is not None:
-        coroner_model = load_uploaded_model(uploaded_coroner_model_file)
+    # Upload model
+    uploaded_pkl_model_file = st.file_uploader("Upload your .pkl model...", type=["pkl"])
+
+    if uploaded_pkl_model_file is not None:
+        coroner_model = load_pkl_model(uploaded_pkl_model_file)
     else:
         coroner_model = None
 
-    with st.form("coroner_form"):
-        st.write("Input the following features:")
-        male = st.selectbox("Male (0 = No, 1 = Yes):", [0, 1])
-        age = st.number_input("Age:", min_value=0, max_value=120, value=50)
-        education = st.selectbox("Education (1-4):", [1, 2, 3, 4])
-        currentSmoker = st.selectbox("Current Smoker (0 = No, 1 = Yes):", [0, 1])
-        cigsPerDay = st.number_input("Cigarettes per Day:", min_value=0, max_value=100, value=0)
-        BPMeds = st.selectbox("Blood Pressure Meds (0 = No, 1 = Yes):", [0, 1])
-        prevalentStroke = st.selectbox("Prevalent Stroke (0 = No, 1 = Yes):", [0, 1])
-        prevalentHyp = st.selectbox("Prevalent Hypertension (0 = No, 1 = Yes):", [0, 1])
-        diabetes = st.selectbox("Diabetes (0 = No, 1 = Yes):", [0, 1])
-        totChol = st.number_input("Total Cholesterol (mg/dL):", min_value=100, max_value=600, value=200)
-        sysBP = st.number_input("Systolic Blood Pressure (mm Hg):", min_value=80, max_value=250, value=120)
-        diaBP = st.number_input("Diastolic Blood Pressure (mm Hg):", min_value=50, max_value=150, value=80)
-        BMI = st.number_input("Body Mass Index (kg/m^2):", min_value=10.0, max_value=60.0, value=25.0)
-        heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
-        glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
+    # Form inputs for the dataset features (excluding TenYearCHD)
+    st.write("Input the following health information:")
+    male = st.number_input("Male (1 for yes, 0 for no)", min_value=0, max_value=1)
+    age = st.number_input("Age", min_value=1)
+    education = st.number_input("Education", min_value=1)
+    currentSmoker = st.number_input("Current Smoker (1 for yes, 0 for no)", min_value=0, max_value=1)
+    cigsPerDay = st.number_input("Cigarettes Per Day", min_value=0)
+    BPMeds = st.number_input("BP Medication (1 for yes, 0 for no)", min_value=0, max_value=1)
+    prevalentStroke = st.number_input("Prevalent Stroke (1 for yes, 0 for no)", min_value=0, max_value=1)
+    prevalentHyp = st.number_input("Prevalent Hypertension (1 for yes, 0 for no)", min_value=0, max_value=1)
+    diabetes = st.number_input("Diabetes (1 for yes, 0 for no)", min_value=0, max_value=1)
+    totChol = st.number_input("Total Cholesterol", min_value=0)
+    sysBP = st.number_input("Systolic BP", min_value=0)
+    diaBP = st.number_input("Diastolic BP", min_value=0)
+    BMI = st.number_input("BMI", min_value=0.0)
+    heartRate = st.number_input("Heart Rate", min_value=0)
+    glucose = st.number_input("Glucose", min_value=0)
 
-        submitted = st.form_submit_button("Predict")
-    
-    if submitted:
+    if st.button("Predict"):
         if coroner_model is not None:
-            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds,
-                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP,
-                                    diaBP, BMI, heartRate, glucose]], dtype=np.float32)
-            
-            st.write(f"Input data: {input_data}")
+            # Prepare the input data for the model
+            input_data = np.array([[male, age, education, currentSmoker, cigsPerDay, BPMeds, 
+                                    prevalentStroke, prevalentHyp, diabetes, totChol, sysBP, 
+                                    diaBP, BMI, heartRate, glucose]])
 
             try:
                 prediction = coroner_model.predict(input_data)
+                confidence = max(coroner_model.predict_proba(input_data)[0])  # Assuming the model has predict_proba method
+                result = "Risk of CHD (1)" if prediction == 1 else "No CHD Risk (0)"
                 
-                # Debugging: Print prediction values
-                st.write(f"Raw prediction values: {prediction}")
-
-                confidence = prediction[0][0]
-                result = "Risk of CHD (1)" if confidence > 0.5 else "No Risk of CHD (0)"
                 st.write(f"Prediction: **{result}**")
                 st.write(f"Prediction Confidence: {confidence:.2f}")
             except Exception as e:
                 st.error(f"Error during prediction: {e}")
         else:
-            st.warning("Please upload a model file first.")
+            st.warning("Please upload a .pkl model file first.")
