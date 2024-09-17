@@ -7,14 +7,14 @@ from PIL import Image
 
 # Define normalization ranges (based on your training data)
 FEATURE_RANGES = {
-    'age': (0, 120),
-    'cigsPerDay': (0, 100),
-    'totChol': (100, 600),
-    'sysBP': (80, 250),
-    'diaBP': (50, 150),
-    'BMI': (10.0, 60.0),
-    'heartRate': (30, 200),
-    'glucose': (50, 400)
+    'age': (32, 70),
+    'cigsPerDay': (0, 70),
+    'totChol': (107, 696),
+    'sysBP': (83, 295),
+    'diaBP': (48, 142),
+    'BMI': (15.54, 56.8),
+    'heartRate': (44, 143),
+    'glucose': (40, 394)
 }
 
 # Function to normalize features
@@ -58,7 +58,7 @@ if menu == "Coroner":
     with st.form("coroner_form"):
         st.write("Input the following features:")
         male = st.selectbox("Male (0 = No, 1 = Yes):", [0, 1])
-        age = st.number_input("Age:", min_value=0, max_value=120, value=50)
+        age = st.number_input("Age:", min_value=0, max_value=120, value=32)
         education = st.selectbox("Education (1-4):", [1, 2, 3, 4])
         currentSmoker = st.selectbox("Current Smoker (0 = No, 1 = Yes):", [0, 1])
         cigsPerDay = st.number_input("Cigarettes per Day:", min_value=0, max_value=100, value=0)
@@ -66,9 +66,9 @@ if menu == "Coroner":
         prevalentStroke = st.selectbox("Prevalent Stroke (0 = No, 1 = Yes):", [0, 1])
         prevalentHyp = st.selectbox("Prevalent Hypertension (0 = No, 1 = Yes):", [0, 1])
         diabetes = st.selectbox("Diabetes (0 = No, 1 = Yes):", [0, 1])
-        totChol = st.number_input("Total Cholesterol (mg/dL):", min_value=100, max_value=600, value=200)
-        sysBP = st.number_input("Systolic Blood Pressure (mm Hg):", min_value=80, max_value=250, value=120)
-        diaBP = st.number_input("Diastolic Blood Pressure (mm Hg):", min_value=50, max_value=150, value=80)
+        totChol = st.number_input("Total Cholesterol (mg/dL):", min_value=100, max_value=696, value=200)
+        sysBP = st.number_input("Systolic Blood Pressure (mm Hg):", min_value=80, max_value=295, value=120)
+        diaBP = st.number_input("Diastolic Blood Pressure (mm Hg):", min_value=45, max_value=150, value=80)
         BMI = st.number_input("Body Mass Index (kg/m^2):", min_value=10.0, max_value=60.0, value=25.0)
         heartRate = st.number_input("Heart Rate (bpm):", min_value=30, max_value=200, value=70)
         glucose = st.number_input("Glucose (mg/dL):", min_value=50, max_value=400, value=100)
