@@ -7,14 +7,14 @@ from PIL import Image
 
 # Define normalization ranges (based on your training data)
 FEATURE_RANGES = {
-    'age': (32, 70),
-    'cigsPerDay': (0, 70),
-    'totChol': (107, 696),
-    'sysBP': (83, 295),
-    'diaBP': (48, 142),
-    'BMI': (15.54, 56.8),
-    'heartRate': (44, 143),
-    'glucose': (40, 394)
+    'age': (32, 70),  # Adjusted based on actual data
+    'cigsPerDay': (0.0, 70.0),  # Adjusted based on actual data
+    'totChol': (107.0, 696.0),  # Adjusted based on actual data
+    'sysBP': (83.5, 295.0),  # Adjusted based on actual data
+    'diaBP': (48.0, 142.5),  # Adjusted based on actual data
+    'BMI': (15.54, 56.8),  # Adjusted based on actual data
+    'heartRate': (44.0, 143.0),  # Adjusted based on actual data
+    'glucose': (40.0, 394.0)  # Adjusted based on actual data
 }
 
 # Function to normalize features
