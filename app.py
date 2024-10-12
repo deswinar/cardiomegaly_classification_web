@@ -3,15 +3,29 @@ import numpy as np
 import joblib
 import tempfile
 from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing.image import img_to_array
 from PIL import Image
+import io
 
 # Function to load the model from the uploaded file
 def load_uploaded_model(uploaded_file):
+    """
+    Loads a Keras model from an uploaded file.
+
+    Args:
+    - uploaded_file: Uploaded file object from Streamlit
+
+    Returns:
+    - Loaded Keras model
+    """
     try:
+        # Create a temporary file to store the uploaded model file
         with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_file:
+            # Write the uploaded file to the temporary file
             temp_file.write(uploaded_file.read())
             temp_file_path = temp_file.name
 
+        # Load the model from the temporary file path
         model = load_model(temp_file_path)
         st.success("Model uploaded and loaded successfully!")
         return model
@@ -21,14 +35,31 @@ def load_uploaded_model(uploaded_file):
 
 # Function to preprocess the image for prediction
 def prepare_image(image, target_size=(150, 150)):
+    """
+    Preprocesses the uploaded image to be compatible with the model's input.
+
+    Args:
+    - image: PIL Image object
+    - target_size: tuple, the target size of the image as expected by the model
+
+    Returns:
+    - Preprocessed image array suitable for model prediction
+    """
+    # Ensure the image is in RGB mode (3 channels)
     if image.mode != 'RGB':
         image = image.convert('RGB')
 
+    # Resize and convert the image to an array
     img = image.resize(target_size)
     img_array = img_to_array(img)
+
+    # Normalize the image array
     img_array = img_array / 255.0
+    
+    # Expand dimensions to match the input shape (1, 150, 150, 3)
     img_array = np.expand_dims(img_array, axis=0)
     
+    # Check shape
     if img_array.shape != (1, *target_size, 3):
         raise ValueError(f"Unexpected image shape: {img_array.shape}, expected (1, {target_size[0]}, {target_size[1]}, 3)")
     
