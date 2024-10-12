@@ -8,7 +8,7 @@ from PIL import Image
 # Function to load the .keras model from the uploaded file
 def load_uploaded_keras_model(uploaded_file):
     try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.keras') as temp_file:
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_file:
             temp_file.write(uploaded_file.read())
             temp_file_path = temp_file.name
 
