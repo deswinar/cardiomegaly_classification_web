@@ -5,6 +5,58 @@ import tempfile
 from tensorflow.keras.models import load_model
 from PIL import Image
 
+# Function to load the model from the uploaded file
+def load_uploaded_model(uploaded_file):
+    """
+    Loads a Keras model from an uploaded file.
+    Args:
+    - uploaded_file: Uploaded file object from Streamlit
+    Returns:
+    - Loaded Keras model
+    """
+    try:
+        # Create a temporary file to store the uploaded model file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.h5') as temp_file:
+            # Write the uploaded file to the temporary file
+            temp_file.write(uploaded_file.read())
+            temp_file_path = temp_file.name
+
+        # Load the model from the temporary file path
+        model = load_model(temp_file_path)
+        st.success("Model uploaded and loaded successfully!")
+        return model
+@@ -34,78 +22,60 @@ def load_uploaded_model(uploaded_file):
+
+# Function to preprocess the image for prediction
+def prepare_image(image, target_size=(150, 150)):
+    """
+    Preprocesses the uploaded image to be compatible with the model's input.
+    Args:
+    - image: PIL Image object
+    - target_size: tuple, the target size of the image as expected by the model
+    Returns:
+    - Preprocessed image array suitable for model prediction
+    """
+    # Ensure the image is in RGB mode (3 channels)
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+
+    # Resize and convert the image to an array
+    img = image.resize(target_size)
+    img_array = img_to_array(img)
+
+    # Normalize the image array
+    img_array = img_array / 255.0
+
+    # Expand dimensions to match the input shape (1, 150, 150, 3)
+    img_array = np.expand_dims(img_array, axis=0)
+
+    # Check shape
+    if img_array.shape != (1, *target_size, 3):
+        raise ValueError(f"Unexpected image shape: {img_array.shape}, expected (1, {target_size[0]}, {target_size[1]}, 3)")
+
+    return img_array
+
 # Define normalization ranges (based on your training data)
 FEATURE_RANGES = {
     'age': (32, 70),  # Adjusted based on actual data
@@ -43,7 +95,74 @@ def load_uploaded_pkl_model(uploaded_file):
 # Streamlit app
 st.title("Heart Classification")
 
-menu = st.selectbox("Select an option", ["Coroner"])
+menu = st.selectbox("Select an option", ["Cardiomegaly", "Coroner"])
+
+if uploaded_model_file is not None:
+    # Load the uploaded model
+    model = load_uploaded_model(uploaded_model_file)
+else:
+    model = None
+if menu == "Cardiomegaly":
+    st.header("Cardiomegaly Classification")
+
+    uploaded_model_file = st.file_uploader("Upload your model (.h5 or .keras file)...", type=["h5", "keras"])
+
+# File uploader for the user to upload an image
+uploaded_image_file = st.file_uploader("Upload an image of the heart X-ray...", type=["jpg", "jpeg", "png"])
+    if uploaded_model_file is not None:
+        model = load_uploaded_model(uploaded_model_file)
+    else:
+        model = None
+
+if uploaded_image_file is not None and model is not None:
+    try:
+        # Display the uploaded image
+        image = Image.open(uploaded_image_file)
+        st.image(image, caption='Uploaded Image.', use_column_width=True)
+    uploaded_image_file = st.file_uploader("Upload an image of the heart X-ray...", type=["jpg", "jpeg", "png"])
+
+        # Preprocess the image
+        prepared_image = prepare_image(image)
+    if uploaded_image_file is not None and model is not None:
+        try:
+            image = Image.open(uploaded_image_file)
+            st.image(image, caption='Uploaded Image.', use_column_width=True)
+            prepared_image = prepare_image(image)
+            prediction = model.predict(prepared_image)
+
+        # Make prediction
+        prediction = model.predict(prepared_image)
+            if prediction[0][0] > 0.5:
+                result = "Normal (1)"
+            else:
+                result = "Cardiomegaly (0)"
+
+        # Output prediction (0 = Cardiomegaly, 1 = Normal)
+        if prediction[0][0] > 0.5:
+            result = "Normal (1)"
+        else:
+            result = "Cardiomegaly (0)"
+            st.write(f"Prediction: **{result}**")
+            st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+
+        # Display the result
+        st.write(f"Prediction: **{result}**")
+        st.write(f"Prediction Confidence: {prediction[0][0]:.2f}")
+        except ValueError as e:
+            st.error(f"Error processing image: {e}")
+        except Exception as e:
+            st.error(f"An unexpected error occurred: {e}")
+
+    except ValueError as e:
+        st.error(f"Error processing image: {e}")
+
+    except Exception as e:
+        st.error(f"An unexpected error occurred: {e}")
+    elif uploaded_image_file is not None and model is None:
+        st.warning("Please upload a model file first.")
+
+elif uploaded_image_file is not None and model is None:
+    st.warning("Please upload a model file first.")
 
 if menu == "Coroner":
     st.header("Coroner Prediction")
