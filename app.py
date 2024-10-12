@@ -25,7 +25,6 @@ def load_uploaded_model(uploaded_file):
         model = load_model(temp_file_path)
         st.success("Model uploaded and loaded successfully!")
         return model
-@@ -34,78 +22,60 @@ def load_uploaded_model(uploaded_file):
 
 # Function to preprocess the image for prediction
 def prepare_image(image, target_size=(150, 150)):
