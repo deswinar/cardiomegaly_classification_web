@@ -78,12 +78,6 @@ def load_uploaded_pkl_model(uploaded_file):
 st.title("Heart Classification")
 
 menu = st.selectbox("Select an option", ["Cardiomegaly", "Coroner"])
-
-if uploaded_model_file is not None:
-    # Load the uploaded model
-    model = load_uploaded_model(uploaded_model_file)
-else:
-    model = None
     
 if menu == "Cardiomegaly":
     st.header("Cardiomegaly Classification")
